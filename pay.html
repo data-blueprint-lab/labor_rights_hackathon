@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pay Illusion · Labor Rights Story Portal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data/labor-rights-data.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body data-page="story" data-story="pay">
+  <div class="backdrop"></div>
+  <main class="page">
+    <header class="masthead">
+      <div class="masthead__copy">
+        <p class="eyebrow" id="story-kicker">Chapter 02 • Pay</p>
+        <h1 id="page-title">Pay illusion</h1>
+        <p id="page-lede" class="lede">Pay parity can look close on paper while women still carry more poverty pressure inside work.</p>
+        <div id="chapter-rail" class="chapter-rail" aria-label="Story chapters"></div>
+        <nav id="story-nav-top" class="nav-row" aria-label="Story navigation"></nav>
+      </div>
+      <section id="hero-stats" class="stats-grid" aria-label="Chapter summary"></section>
+    </header>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">Chapter summary</p>
+          <h2>What the data says in plain language</h2>
+        </div>
+      </div>
+      <div id="story-summary" class="summary-copy"></div>
+    </section>
+
+    <section class="story-layout">
+      <article class="panel chart-panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Main evidence</p>
+            <h2 id="main-chart-title">Pay gap vs female poverty</h2>
+          </div>
+          <p id="main-chart-note" class="panel-note">A small gap from parity does not guarantee economic security.</p>
+        </div>
+        <svg id="main-chart" viewBox="0 0 760 420" role="img" aria-label="Scatter plot for the pay chapter"></svg>
+      </article>
+      <aside class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Supporting evidence</p>
+            <h2>Country metrics</h2>
+          </div>
+        </div>
+        <div id="metric-cards" class="metric-grid"></div>
+      </aside>
+    </section>
+
+    <section class="story-layout">
+      <article class="panel chart-panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Time echo</p>
+            <h2 id="trend-chart-title">Pay gap over time</h2>
+          </div>
+          <p id="trend-chart-note" class="panel-note">The same chapter, tracked across years.</p>
+        </div>
+        <svg id="trend-chart" viewBox="0 0 760 320" role="img" aria-label="Trend chart for the pay chapter"></svg>
+      </article>
+      <aside class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Country spotlight</p>
+            <h2>Top paradox countries</h2>
+          </div>
+        </div>
+        <div id="spotlight-list" class="rank-list"></div>
+      </aside>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">Cross-story context</p>
+          <h2>Mini series across the same chapter country</h2>
+        </div>
+      </div>
+      <div id="sparkline-grid" class="sparkline-grid"></div>
+    </section>
+
+    <nav id="story-nav-bottom" class="nav-row" aria-label="Story navigation"></nav>
+
+    <footer class="footer">
+      <p class="app-status" id="app-status"></p>
+    </footer>
+  </main>
+</body>
+</html>

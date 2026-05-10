@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Labor Rights Story Portal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data/labor-rights-data.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body data-page="portal">
+  <div class="backdrop"></div>
+  <main class="page">
+    <header class="masthead">
+      <div class="masthead__copy">
+        <p class="eyebrow">Build for Impact • Labor Rights Data Hackathon</p>
+        <h1 id="page-title">Labor Rights Story Portal</h1>
+        <p id="page-lede" class="lede">A master summary of the full labor-rights story.</p>
+        <div id="chapter-rail" class="chapter-rail" aria-label="Story chapters"></div>
+      </div>
+      <section id="hero-stats" class="stats-grid" aria-label="Dataset summary"></section>
+    </header>
+
+    <section class="panel panel--summary">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">Story at a glance</p>
+          <h2>Read the whole arc before you open a chapter</h2>
+        </div>
+        <p class="panel-note">The portal keeps the overview up front and the chapter pages one click away.</p>
+      </div>
+      <div id="story-summary" class="summary-copy"></div>
+    </section>
+
+    <section class="chapter-grid" id="chapter-grid" aria-label="Story chapters"></section>
+
+    <section class="panel panel--summary">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">Signals behind the narrative</p>
+          <h2>Four chapter-level takeaways</h2>
+        </div>
+      </div>
+      <div id="portal-insights" class="insight-grid"></div>
+    </section>
+
+    <footer class="footer">
+      <p class="app-status" id="app-status">Open a chapter to continue the story line.</p>
+    </footer>
+  </main>
+  <noscript>
+    <div class="page">
+      <section class="panel">
+        <h2>JavaScript is required for the interactive charts.</h2>
+        <p>The chapter pages and summary are still present, but the data visualizations need scripts to render.</p>
+      </section>
+    </div>
+  </noscript>
+</body>
+</html>
