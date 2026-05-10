@@ -2,6 +2,14 @@
 
 Static hackathon site for the labor-rights datasets in `src-data/`.
 
+## Live site
+
+Open the rendered story portal here:
+
+https://data-blueprint-lab.github.io/labor_rights_hackathon/
+
+Use this link instead of opening the HTML files in the GitHub repo browser, which shows source code.
+
 ## What it is
 
 - A story-first portal built around five labor metrics:
