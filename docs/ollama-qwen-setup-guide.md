@@ -1,44 +1,57 @@
 # Ollama and Qwen Setup Guide
 
-This document captures the exact setup we used on this machine to install and verify Ollama, run the `qwen2.5-coder:7b` model, and wire up PowerShell helpers so Qwen can be called quickly from the terminal.
+This guide captures the full setup we used to run Qwen locally through Ollama and make it useful from PowerShell. It is written so someone can start from scratch on a Windows laptop and end up with the same workflow:
 
-The goal is that someone else can follow the same sequence on their own Windows laptop and end up with the same working setup.
+- Ollama installed locally
+- `qwen2.5-coder:7b` available as the model
+- `qwen` for fast direct prompts
+- `qwenctx` for folder-aware prompts with rolling session memory
+- `qwenctxclear` for resetting the stored context
 
-## What was installed
+It also explains how this differs from Codex in this workspace.
 
-- **Ollama** as the local model runtime
-- **Qwen** model: `qwen2.5-coder:7b`
-- **PowerShell helpers**:
-  - `qwen` for direct prompts
-  - `qwenctx` for prompts that include local folder or repo context
+## 1. What this setup is for
 
-## 1. Install Ollama
+- **Ollama** is the local runtime that serves the model on your laptop.
+- **Qwen** is the model we use locally through Ollama.
+- **Codex** is the assistant in this workspace that edits the repo and reasons about the codebase here.
+- **`qwen`** is the PowerShell shortcut for direct Qwen prompts.
+- **`qwenctx`** is the PowerShell shortcut for prompts that include local folder or repo context.
+- **`qwenctxclear`** removes the saved session memory and starts fresh.
+
+If you want a local model in your terminal, use Qwen through Ollama. If you want the repo-editing agent in this workspace, use Codex here.
+
+## 2. Install Ollama
 
 1. Install Ollama on Windows from the official Ollama installer.
-2. Confirm the executable is available on your machine.
-3. If `ollama` is not in `PATH`, use the full path to the executable.
+2. Open Ollama once so the local service is available.
+3. Confirm the CLI works.
 
-On this machine, the installed executable was:
-
-```powershell
-C:\Users\AnkurSinha\AppData\Local\Programs\Ollama\ollama.exe
-```
-
-## 2. Verify Ollama is available
-
-After installation, verify the CLI works:
+If `ollama` is already on your `PATH`, run:
 
 ```powershell
 ollama list
 ```
 
-If `ollama` is not recognized, run it by full path instead:
+If the command is not found, use the full path to the executable. On this machine it was:
+
+```powershell
+C:\Users\AnkurSinha\AppData\Local\Programs\Ollama\ollama.exe
+```
+
+So the equivalent command was:
 
 ```powershell
 & 'C:\Users\AnkurSinha\AppData\Local\Programs\Ollama\ollama.exe' list
 ```
 
-On this machine, `ollama list` showed these installed models:
+If the model is not installed yet, pull it with:
+
+```powershell
+ollama pull qwen2.5-coder:7b
+```
+
+On our machine it was already present, and `ollama list` showed:
 
 - `qwen2.5-coder:7b`
 - `llama3.2:latest`
@@ -51,77 +64,75 @@ Ollama exposes a local HTTP API. We confirmed it was reachable at:
 http://localhost:11434
 ```
 
-To inspect installed models through the API:
+To inspect the installed models through the API:
 
 ```powershell
 Invoke-RestMethod http://localhost:11434/api/tags
 ```
 
-This confirmed that `qwen2.5-coder:7b` was registered locally and ready to use.
+That confirmed `qwen2.5-coder:7b` was registered locally and ready to use.
 
 ## 4. Run Qwen directly
 
-We tested Qwen with a simple one-shot prompt:
+You can run Qwen in the terminal without any wrapper first to verify the model itself works.
 
-```powershell
-& 'C:\Users\AnkurSinha\AppData\Local\Programs\Ollama\ollama.exe' run qwen2.5-coder:7b "Reply with one short sentence confirming you are running."
-```
-
-The model responded successfully, which proved the local install was working.
-
-You can also run it interactively:
+Interactive mode:
 
 ```powershell
 & 'C:\Users\AnkurSinha\AppData\Local\Programs\Ollama\ollama.exe' run qwen2.5-coder:7b
 ```
 
-## 5. Add a PowerShell helper for direct Qwen prompts
+One-shot prompt:
 
-We added a persistent PowerShell function called `qwen` so Qwen can be called without typing the long Ollama command each time.
+```powershell
+& 'C:\Users\AnkurSinha\AppData\Local\Programs\Ollama\ollama.exe' run qwen2.5-coder:7b "Reply with one short sentence confirming you are running."
+```
 
-The function lives in the PowerShell profile:
+This direct call is useful when you just want to test the model or ask a single question.
+
+## 5. Put the helpers in your PowerShell profile
+
+We added the helper functions to the PowerShell profile so they are available in new terminal sessions.
+
+The profile path on this machine was:
 
 ```powershell
 C:\Users\AnkurSinha\OneDrive - Influence AB\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
 ```
 
-The direct prompt helper is:
+On another machine, use your own profile path by running:
 
 ```powershell
-function qwen {
-    param(
-        [Parameter(ValueFromRemainingArguments = $true)]
-        [string[]]$Prompt
-    )
-
-    $body = @{
-        model  = 'qwen2.5-coder:7b'
-        prompt = ($Prompt -join ' ')
-        stream = $false
-    } | ConvertTo-Json -Depth 3
-
-    try {
-        $response = Invoke-RestMethod 'http://localhost:11434/api/generate' -Method Post -ContentType 'application/json' -Body $body
-        $response.response
-    }
-    catch {
-        Write-Error "Unable to reach Ollama at http://localhost:11434. Make sure Ollama is running."
-    }
-}
+$PROFILE
 ```
 
-Usage:
+If the profile file does not exist, create it. The easiest way is:
 
 ```powershell
-qwen write a short summary of this repo
-qwen "Explain this PowerShell function in one paragraph"
+notepad $PROFILE
 ```
 
-## 6. Allow the PowerShell profile to load
+Then paste the helper functions into that file.
 
-This machine had `LocalMachine` execution policy set to `AllSigned`, so unsigned profile scripts would not load automatically.
+After saving the profile, reload it in the current shell:
 
-We checked the execution policy:
+```powershell
+. $PROFILE
+```
+
+Or open a fresh PowerShell window.
+
+You can confirm the helpers loaded with:
+
+```powershell
+Get-Command qwen, qwenctx, qwenctxclear
+```
+
+## 6. Handle PowerShell execution policy
+
+This machine had `LocalMachine` set to `AllSigned`, which blocks unsigned profile scripts.
+
+We checked the policy with:
 
 ```powershell
 Get-ExecutionPolicy -List
@@ -133,178 +144,212 @@ Then we set the current-user scope to allow local profile scripts:
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force
 ```
 
-That change lets the local PowerShell profile run without changing the machine-wide policy.
+That is the least disruptive fix if your profile will not load.
 
-## 7. Reload the profile
+## 7. Use `qwen` for direct prompts
 
-After updating the profile, reload it in the current shell:
+`qwen` is the simple wrapper for quick questions.
 
-```powershell
-. $PROFILE
-```
-
-Or open a new PowerShell window.
-
-You can then confirm the helper exists:
+Example usage:
 
 ```powershell
-Get-Command qwen
+qwen write a short summary of this README
+qwen "Explain this PowerShell function in one paragraph"
+qwen "List the top 3 risks in this approach"
 ```
 
-## 8. Add context-aware Qwen support
+What it does:
 
-We also added a second helper named `qwenctx` so Qwen can answer with local project context instead of only the raw prompt.
+- sends your text directly to `http://localhost:11434/api/generate`
+- uses `qwen2.5-coder:7b`
+- returns the model output without loading any folder context
 
-This is useful when you want the model to understand:
+Use `qwen` when you want a fast prompt and you do not need local file context.
 
-- a git repo
-- a normal laptop folder
-- the current working directory
+## 8. Use `qwenctx` for folder-aware prompts
 
-The helper accepts an explicit path:
+`qwenctx` is the more capable wrapper.
+
+It is designed for two cases:
+
+- a git repo root
+- a normal local folder, even if it is not a git repo
+
+If you pass `-Path`, it uses that exact folder as the scan target:
 
 ```powershell
 qwenctx -Path C:\Some\Folder explain this project
 ```
 
-If no path is passed:
+If you do not pass `-Path`:
 
-- it uses the current git repo root when the folder is inside a repo
+- and the current working directory is a git repo root, it uses that repo root
 - otherwise it uses the current folder
 
-The context wrapper includes:
+When you want repo metadata like branch and commit, point it at the repo root or run it from the repo root without `-Path`. If you point it at a nested subfolder, it will still scan that folder, but the snapshot is folder-scoped rather than repo-scoped.
+
+What `qwenctx` includes in the prompt:
 
 - target root path
-- repo metadata when a `.git` folder exists
-- file count and total size
+- file count
+- total size of the folder
+- file-by-file metadata
 - readable text file contents
-- metadata for binary or unreadable files
+- metadata only for binary or unreadable files
 
-## 9. `qwenctx` behavior
+It also keeps a persistent session memory file so later calls can reuse prior folder summaries.
 
-The wrapper was designed to work in both of these cases:
+## 9. What `qwenctx` does with files
 
-### Git repo folder
+The wrapper scans folders recursively and tries to keep the prompt usable.
 
-If the folder is part of a git repo, the wrapper uses the repo root and includes:
+Behavior we used:
 
-- branch name
-- current commit hash
-- a recursive file snapshot from the chosen root
+- text files are read and included
+- large text files are truncated to a head/tail preview
+- binary files, PDFs, images, archives, executables, and similar files are listed as metadata only
 
-### Plain local folder
-
-If the folder is not connected to git, the wrapper still works.
-
-It simply scans the folder you gave it, or the current folder if no path is passed.
-
-This was important because a lot of useful local work happens outside a git repository.
+That is important because the model does not benefit from raw bytes for binary content, and huge prompts can become slow or time out.
 
 ## 10. Session memory and rolling window
 
-`qwenctx` also keeps a small persistent memory file so it can behave more like a session-aware CLI.
+This is the part that makes `qwenctx` feel more like a session tool.
 
-The memory file is stored here on Windows:
+`qwenctx` stores a reusable summary for each folder it processes. Those summaries are saved locally and fed into later calls.
+
+The session memory file lives under the user profile:
 
 ```powershell
 C:\Users\<you>\.codex\memories\qwenctx-session.json
 ```
 
-It stores:
+On our machine, that file held:
 
 - one summary per folder
-- the last time that folder was used
-- a rolling window of the most recent folder summaries
+- the last time the folder was used
+- a rolling window of recent folder summaries
 
 The default rolling window keeps the most recent 12 folder summaries.
 
-You can change that with environment variables if needed:
+You can tune the limits with environment variables:
 
 ```powershell
 $env:QWENCTX_SESSION_MAX_ENTRIES = 12
 $env:QWENCTX_SESSION_ENTRY_MAX_CHARS = 1200
 ```
 
-There is also a reset command:
+That lets you keep the memory small enough for bigger projects.
+
+Important detail:
+
+- this is not literal model memory
+- it is a wrapper that stores summaries and re-feeds them into later prompts
+
+That is why it can feel session-aware even though each Ollama call is still stateless on its own.
+
+## 11. Reset the session memory
+
+If you want a clean start, run:
 
 ```powershell
 qwenctxclear
 ```
 
-That deletes the session memory file and starts fresh.
+That deletes the stored session memory file and starts the rolling window again from zero.
 
-## 11. How non-text files are handled
+You may also want to use it when:
 
-To keep the prompt usable, the wrapper does not try to inline raw bytes for everything.
+- you are switching projects
+- the stored summaries are stale
+- you want Qwen to forget prior folder context
 
-Instead:
+## 12. Best way to work on large projects
 
-- text files are read and included in the prompt
-- large text files are truncated to a head/tail preview
-- binary files, PDFs, images, archives, executables, and similar files are listed with metadata only
+The biggest practical lesson was that a full recursive scan of a big project can time out or become unwieldy.
 
-This avoids breaking the prompt with unreadable content while still letting Qwen know those files exist.
+For large projects, the better workflow is folder by folder:
 
-## 12. Example `qwenctx` usage
+1. Inspect the root once if the project is small enough.
+2. If the root is too large, scan one major folder at a time.
+3. Let `qwenctx` save the summary after each folder call.
+4. Ask follow-up questions later and let the stored summaries provide continuity.
+
+Example workflow:
 
 ```powershell
-qwenctx summarize this folder
-qwenctx -Path C:\Projects\MyApp explain the structure
-qwenctx -Path . identify the key files I should inspect first
+qwenctx -Path .\src-data summarize the dataset folders
+qwenctx -Path .\scripts summarize the build scripts
+qwenctx -Path .\docs summarize the documentation
+qwenctx -Path .\references summarize the reference material
+qwenctx -Path . summarize the whole project at a high level
 ```
 
-## 13. What we validated
+That is the closest thing to a local Claude-CLI-style experience we built here:
 
-We validated the setup in the following order:
+- each call saves a summary
+- later calls reuse the saved summaries
+- the rolling window keeps the context useful without growing forever
 
-1. Confirmed Ollama was installed and accessible.
-2. Confirmed the installed models with `ollama list`.
-3. Confirmed the local Ollama API responded on `localhost:11434`.
-4. Ran a direct `qwen2.5-coder:7b` prompt successfully.
-5. Added the `qwen` helper to PowerShell profile.
-6. Enabled the profile to load with `RemoteSigned` at the current-user scope.
-7. Added `qwenctx` for context-aware prompting.
-8. Verified `qwenctx` on both a normal folder and the actual repo root.
+## 13. When to use Qwen vs Codex
+
+Use **Qwen** when you want:
+
+- a local terminal model
+- quick explanations
+- folder summaries
+- project context from the file system
+- offline-friendly prompting through Ollama
+
+Use **Codex** when you want:
+
+- repo edits
+- code changes inside this workspace
+- planning and implementation help on the current project
+- agentic work in the same environment you are using now
+
+There is no local `codex` PowerShell command in this setup. Codex is the assistant you access in this workspace, while Qwen is the local model you run from PowerShell.
 
 ## 14. Troubleshooting
 
-### `ollama` is not recognized
+If `ollama` is not recognized:
 
-Use the full path to `ollama.exe`, or add the Ollama install directory to `PATH`.
+- use the full path to `ollama.exe`
+- or add Ollama to your `PATH`
 
-### `qwen` says it cannot reach Ollama
+If `qwen` says it cannot reach Ollama:
 
-Make sure Ollama is running and that `http://localhost:11434` is reachable.
+- make sure Ollama is running
+- confirm `http://localhost:11434` responds
 
-### PowerShell profile does not load
+If the PowerShell profile does not load:
 
-Check execution policy:
+- check `Get-ExecutionPolicy -List`
+- set `CurrentUser` to `RemoteSigned` if your machine blocks local profiles
 
-```powershell
-Get-ExecutionPolicy -List
-```
+If `qwenctx` is too slow or times out:
 
-If needed, set:
+- use `-Path` on smaller folders
+- scan the project folder by folder
+- rely on the session memory to carry context forward
 
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned -Force
-```
+If the session memory gets noisy:
 
-### `qwenctx` output is too large
+- run `qwenctxclear`
+- or lower the rolling window size with `QWENCTX_SESSION_MAX_ENTRIES`
 
-Point it at a smaller folder with `-Path`, or reduce the prompt scope by asking about a specific file or area.
+## 15. Minimal fresh-laptop checklist
 
-## 15. Minimal install sequence for a new laptop
-
-If someone wants to reproduce the setup from scratch, the shortest version is:
+If someone wants the shortest path from zero to a working setup, this is the sequence:
 
 1. Install Ollama on Windows.
 2. Confirm `ollama list` works.
-3. Make sure `qwen2.5-coder:7b` is installed.
-4. Verify `http://localhost:11434` responds.
-5. Add the `qwen` helper to the PowerShell profile.
-6. Set `CurrentUser` execution policy to `RemoteSigned`.
+3. Pull `qwen2.5-coder:7b` if it is not already installed.
+4. Confirm the local API responds on `http://localhost:11434`.
+5. Add `qwen`, `qwenctx`, and `qwenctxclear` to the PowerShell profile.
+6. Set `CurrentUser` execution policy to `RemoteSigned` if profile loading is blocked.
 7. Reload PowerShell with `. $PROFILE`.
-8. Add `qwenctx` if they want repo/folder context support.
+8. Start with `qwen` for direct prompts.
+9. Use `qwenctx` for folder-aware prompts.
+10. Use `qwenctxclear` when you want a clean memory state.
 
-That is enough to get a working local Qwen terminal setup.
+That is enough to reproduce the same terminal-based local Qwen workflow on a new machine.
